@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35806.99 d17.13
+VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ariport.Server", "Ariport.Server\Ariport.Server.csproj", "{66B80402-9A9A-49E1-9C16-84A8F6AACF40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Airport.Data", "Airport.Data\Airport.Data.csproj", "{2224D28D-569E-4E86-92B6-120373094793}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{66B80402-9A9A-49E1-9C16-84A8F6AACF40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66B80402-9A9A-49E1-9C16-84A8F6AACF40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66B80402-9A9A-49E1-9C16-84A8F6AACF40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2224D28D-569E-4E86-92B6-120373094793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2224D28D-569E-4E86-92B6-120373094793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2224D28D-569E-4E86-92B6-120373094793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2224D28D-569E-4E86-92B6-120373094793}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
