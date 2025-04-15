@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using Airport.Data.Enum;
+using System.Runtime.Serialization;
 
 namespace Airport.Data.Models
 {
@@ -8,14 +9,16 @@ namespace Airport.Data.Models
         public Guid Id { get; set; }
 
         [DataMember]
-        public string PassengerName { get; set; }
+        public Guid PassengerID { get; set; }
 
-        [DataMember]
-        public string PassengerSurname { get; set; }
+        public virtual Passenger Passenger { get; set; }
 
         [DataMember]
         public Guid FlightID { get; set; }
 
         public virtual Flight Flight { get; set; }
-    }
+
+        [DataMember]
+        public TicketStatus Status { get; set; }
+    }   
 }

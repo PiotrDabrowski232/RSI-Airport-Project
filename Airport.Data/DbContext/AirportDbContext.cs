@@ -11,6 +11,7 @@ namespace Airport.Data.Context
 
         public DbSet<AirplaneTicket> AirplaneTickets { get; set; }
         public DbSet<Flight> Flights { get; set; }
+        public DbSet<Passenger> Passengers { get; set; }
     }
 
 }
