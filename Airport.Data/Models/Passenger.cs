@@ -1,4 +1,5 @@
-﻿namespace Airport.Data.Models
+﻿
+namespace Airport.Data.Models
 {
     public class Passenger
     {
@@ -6,5 +7,6 @@
         public string Name { get; set; }
         public string Surname { get; set; }
         public string Pesel { get; set; }
+        public ICollection<AirplaneTicket> AirplaneTickets { get; set; }
     }
 }

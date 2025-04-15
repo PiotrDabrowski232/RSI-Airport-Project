@@ -1,4 +1,5 @@
-﻿namespace Airport.Data.Models
+﻿
+namespace Airport.Data.Models
 {
     public class Flight
     {
@@ -7,5 +8,6 @@
         public string FlightTo { get; set; }
         public DateTime DepartureDate { get; set; }
         public DateTime ArrivalDate { get; set; }
+        public virtual ICollection<AirplaneTicket> AirplaneTickets { get;  set; }
     }
 }
