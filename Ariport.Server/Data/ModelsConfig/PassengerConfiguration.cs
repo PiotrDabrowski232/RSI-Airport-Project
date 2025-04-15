@@ -1,7 +1,7 @@
-﻿using Airport.Data.Models;
+﻿using Airport.Server.Models;
 using System.Data.Entity.ModelConfiguration;
 
-namespace Airport.Data.ModelsConfig
+namespace Airport.Server.ModelsConfig
 {
     public class PassengerConfiguration : EntityTypeConfiguration<Passenger>
     {

@@ -1,4 +1,4 @@
-﻿namespace Airport.Data.Migrations
+﻿namespace Ariport.Server.Migrations
 {
     using System;
     using System.Data.Entity.Migrations;
@@ -12,12 +12,14 @@
                 c => new
                     {
                         Id = c.Guid(nullable: false),
-                        PassengerName = c.String(),
-                        PassengerSurname = c.String(),
+                        PassengerID = c.Guid(nullable: false),
                         FlightID = c.Guid(nullable: false),
+                        Status = c.Int(nullable: false),
                     })
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.Flights", t => t.FlightID, cascadeDelete: true)
+                .ForeignKey("dbo.Passengers", t => t.PassengerID, cascadeDelete: true)
+                .Index(t => t.PassengerID)
                 .Index(t => t.FlightID);
             
             CreateTable(
@@ -32,12 +34,26 @@
                     })
                 .PrimaryKey(t => t.Id);
             
+            CreateTable(
+                "dbo.Passengers",
+                c => new
+                    {
+                        Id = c.Guid(nullable: false),
+                        Name = c.String(),
+                        Surname = c.String(),
+                        Pesel = c.String(),
+                    })
+                .PrimaryKey(t => t.Id);
+            
         }
         
         public override void Down()
         {
+            DropForeignKey("dbo.AirplaneTickets", "PassengerID", "dbo.Passengers");
             DropForeignKey("dbo.AirplaneTickets", "FlightID", "dbo.Flights");
             DropIndex("dbo.AirplaneTickets", new[] { "FlightID" });
+            DropIndex("dbo.AirplaneTickets", new[] { "PassengerID" });
+            DropTable("dbo.Passengers");
             DropTable("dbo.Flights");
             DropTable("dbo.AirplaneTickets");
         }

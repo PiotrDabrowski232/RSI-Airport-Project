@@ -1,5 +1,7 @@
-﻿
-namespace Airport.Data.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace Airport.Server.Models
 {
     public class Passenger
     {

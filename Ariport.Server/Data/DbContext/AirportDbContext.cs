@@ -1,8 +1,8 @@
-﻿using Airport.Data.Models;
-using Airport.Data.ModelsConfig;
+﻿using Airport.Server.Models;
+using Airport.Server.ModelsConfig;
 using System.Data.Entity;
 
-namespace Airport.Data.Context
+namespace Airport.Server.Context
 {
     public class AirportDbContext : DbContext
     {

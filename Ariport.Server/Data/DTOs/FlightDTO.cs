@@ -1,13 +1,20 @@
-﻿
-namespace Airport.Data.Models
+﻿using System;
+using System.Runtime.Serialization;
+
+namespace Airport.Server.DTOs
 {
-    public class Flight
+    public class FlightDTO
     {
-        public Guid Id { get; set; }
+        [DataMember]
         public string FlightFrom { get; set; }
+
+        [DataMember]
         public string FlightTo { get; set; }
+
+        [DataMember]
         public DateTime DepartureDate { get; set; }
+
+        [DataMember]
         public DateTime ArrivalDate { get; set; }
-        public virtual ICollection<AirplaneTicket> AirplaneTickets { get;  set; }
     }
 }

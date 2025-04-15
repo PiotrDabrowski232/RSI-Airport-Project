@@ -1,6 +1,7 @@
-﻿using Airport.Data.Enum;
+﻿using Airport.Server.Enum;
+using System;
 
-namespace Airport.Data.Models
+namespace Airport.Server.Models
 {
     public class AirplaneTicket
     {
