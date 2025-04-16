@@ -1,13 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ServiceModel;
-using Airport.Server.Models;
+using System.Threading.Tasks;
+using Airport.Server.DTOs;
 
 namespace Ariport.Server.Services.Interfaces
 {
     [ServiceContract]
-    public interface IFlightService 
+    public interface IFlightService
     {
         [OperationContract]
-        List<Flight> GetFlights(); 
+        Task<List<FlightDTO>> GetFlightsAsync();
+
+        [OperationContract]
+        Task<List<FlightDTO>> SearchFlightsAsync(string from, string to, DateTime? departureDate);
+
+        [OperationContract]
+        Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId);
+
+        [OperationContract]
+        [ServiceKnownType(typeof(byte[]))]
+        Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId);
     }
 }
