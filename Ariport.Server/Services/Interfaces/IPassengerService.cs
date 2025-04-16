@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using Airport.Server.Models;
+using Ariport.Server.Data.DTOs;
 
 namespace Ariport.Server.Services.Interfaces
 {
@@ -9,15 +11,15 @@ namespace Ariport.Server.Services.Interfaces
     public interface IPassengerService
     {
         [OperationContract]
-        List<Passenger> GetPassengers();
+        Task<List<PassengerDTO>> GetPassengers();
 
         [OperationContract]
-        Passenger GetPassenger(Guid id);
+        Task<PassengerDTO> GetPassenger(Guid id);
 
         [OperationContract]
-        Guid CreatePassenger(string name, string surname, string pesel);
+        Task<Guid> CreatePassenger(string name, string surname, string pesel);
 
         [OperationContract]
-        List<AirplaneTicket> GetPassengerTickets(Guid passengerId);
+        Task<List<AirplaneTicket>> GetPassengerTickets(Guid passengerId);
     }
 }
