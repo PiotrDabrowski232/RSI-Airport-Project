@@ -6,28 +6,16 @@ using System.Threading.Tasks;
 using Airport.Server.Context;
 using Airport.Server.Models;
 using Airport.Server.Repositories.Interfaces;
+using Ariport.Server.Repositories.Interfaces;
+using Ariport.Server.Repositories;
 
 namespace Airport.Server.Repositories
 {
-    public class FlightRepository : IFlightRepository
+    public class FlightRepository : GenericRepository<Flight>, IGenericRepository<Flight>, IFlightRepository
     {
-        private readonly AirportDbContext _context;
-
-        public FlightRepository(AirportDbContext context)
+        public FlightRepository(AirportDbContext context) : base(context)
         {
-            _context = context;
         }
-
-        public async Task<List<Flight>> GetAllAsync()
-        {
-            return await _context.Flights.ToListAsync();
-        }
-
-        public async Task<Flight> GetByIdAsync(Guid id)
-        {
-            return await _context.Flights.FindAsync(id);
-        }
-
         public async Task<List<Flight>> SearchAsync(string from, string to, DateTime? departureDate)
         {
             var query = _context.Flights.AsQueryable();
