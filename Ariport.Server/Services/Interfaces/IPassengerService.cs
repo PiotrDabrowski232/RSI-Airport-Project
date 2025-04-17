@@ -18,8 +18,5 @@ namespace Ariport.Server.Services.Interfaces
 
         [OperationContract]
         Task<Guid> CreatePassenger(string name, string surname, string pesel);
-
-        [OperationContract]
-        Task<List<AirplaneTicket>> GetPassengerTickets(Guid passengerId);
     }
 }

@@ -16,9 +16,6 @@ namespace Ariport.Server.Services.Interfaces
         Task<List<FlightDTO>> SearchFlightsAsync(string from, string to, DateTime? departureDate);
 
         [OperationContract]
-        Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId);
-
-        [OperationContract]
         [ServiceKnownType(typeof(byte[]))]
         Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId);
     }

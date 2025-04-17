@@ -1,5 +1,6 @@
 ﻿using Airport.Server.Context;
 using Airport.Server.DTOs;
+using Airport.Server.Enum;
 using Airport.Server.Models;
 using Airport.Server.Repositories;
 using Airport.Server.Repositories.Interfaces;
@@ -14,17 +15,19 @@ using System.Threading.Tasks;
 
 namespace Ariport.Server.Services
 {
-    public class AirportService : IFlightService, IPassengerService
+    public class AirportService : IFlightService, IPassengerService, IAirplaneTicketService
     {
 
         private readonly IFlightRepository _flightRepository;
         private readonly IPassengerRepository _passengerRepository;
+        private readonly IAirplaneTicketRepository _airplaneTicketRepository;
 
         public AirportService()
         {
             var context = new AirportDbContext();
             _flightRepository = new FlightRepository(context);
             _passengerRepository = new PassengerRepository(context);
+            _airplaneTicketRepository = new AirplaneTicketRepository(context);
         }
 
         public AirportService(IFlightRepository flightRepository, IPassengerRepository passengerRepository)
@@ -36,7 +39,7 @@ namespace Ariport.Server.Services
         #region FlightService
         public async Task<List<FlightDTO>> GetFlightsAsync()
         {
-            var flights = await _flightRepository.GetAllAsync();
+            var flights = await _flightRepository.GetAll();
             return flights.Select(f => new FlightDTO
             {
                 FlightFrom = f.FlightFrom,
@@ -56,12 +59,6 @@ namespace Ariport.Server.Services
                 DepartureDate = f.DepartureDate,
                 ArrivalDate = f.ArrivalDate
             }).ToList();
-        }
-
-        public async Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId)
-        {
-            // Implementacja logiki zakupu biletu
-            throw new NotImplementedException();
         }
 
         public async Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId)
@@ -105,11 +102,39 @@ namespace Ariport.Server.Services
                 Pesel = pesel
             });
         }
+        #endregion
 
-        public Task<List<AirplaneTicket>> GetPassengerTickets(Guid passengerId)
+        #region AirplaneTicket
+
+        public async Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId)
         {
-            throw new NotImplementedException();
+             return await _airplaneTicketRepository.Add(new AirplaneTicket
+            {
+                Id = Guid.NewGuid(),
+                FlightID = flightId,
+                PassengerID = passengerId,
+                Status = TicketStatus.Purchased
+            });
         }
+
+        public async Task<List<AirplaneTicketDto>> GetPassengerTickets(Guid passengerId)
+        {
+            var result = await _airplaneTicketRepository.PassengerTickets(passengerId);
+
+            return result.Select(x => new AirplaneTicketDto
+            {
+                Id = x.Id,
+                Name = x.Passenger.Name,
+                Surname = x.Passenger.Surname,
+                Pesel = x.Passenger.Pesel,
+                FlightFrom = x.Flight.FlightFrom,
+                FlightTo = x.Flight.FlightTo,
+                DepartureDate = x.Flight.DepartureDate,
+                ArrivalDate = x.Flight.ArrivalDate,
+                Status = x.Status
+            }).ToList();
+        }
+
         #endregion
     }
 }

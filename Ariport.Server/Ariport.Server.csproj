@@ -112,6 +112,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\DbContext\AirportDbContext.cs" />
+    <Compile Include="Data\DTOs\AirplaneTicketDto.cs" />
     <Compile Include="Data\DTOs\FlightDTO.cs" />
     <Compile Include="Data\DTOs\PassengerDTO.cs" />
     <Compile Include="Data\DTOs\TicketPurchaseDTO.cs" />
@@ -129,14 +130,17 @@
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\AirplaneTicketRepository.cs" />
     <Compile Include="Repositories\FlightRepository.cs" />
     <Compile Include="Repositories\GenericRepository.cs" />
+    <Compile Include="Repositories\Interfaces\IAirplaneTicketRepository.cs" />
     <Compile Include="Repositories\Interfaces\IFlightRepository.cs" />
     <Compile Include="Repositories\Interfaces\IGenericRepository.cs" />
     <Compile Include="Repositories\Interfaces\IPassengerRepository.cs" />
     <Compile Include="Repositories\PassengerRepository.cs" />
     <Compile Include="ServiceHost.cs" />
     <Compile Include="Services\AirportService.cs" />
+    <Compile Include="Services\Interfaces\IAirplaneTicketService.cs" />
     <Compile Include="Services\Interfaces\IFlightService.cs" />
     <Compile Include="Services\Interfaces\IPassengerService.cs" />
   </ItemGroup>
