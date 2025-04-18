@@ -12,8 +12,17 @@ namespace Ariport.Server
         {
             Uri baseAddress = new Uri("http://localhost:8080/Airport/");
 
-            using (var serviceHost = new System.ServiceModel.ServiceHost(typeof(FlightService), baseAddress))
+            var binding = new WSHttpBinding(SecurityMode.None)
             {
+                MessageEncoding = WSMessageEncoding.Mtom,
+                MaxReceivedMessageSize = 10485760
+            };
+
+            using (var serviceHost = new System.ServiceModel.ServiceHost(typeof(AirportService), baseAddress))
+            {
+                serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
+                serviceHost.AddServiceEndpoint(typeof(IPassengerService), binding, "PassengerService");
+
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                 {
                     HttpGetEnabled = true,
@@ -26,18 +35,11 @@ namespace Ariport.Server
                     MetadataExchangeBindings.CreateMexHttpBinding(),
                     "mex");
 
-                var binding = new WSHttpBinding(SecurityMode.None)
-                {
-                    MessageEncoding = WSMessageEncoding.Mtom,
-                    MaxReceivedMessageSize = 10485760
-                };
-
-                serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
-
                 serviceHost.Open();
 
                 Console.WriteLine("The service is ready.");
                 Console.WriteLine("Press <Enter> to stop the service.");
+
                 Console.ReadLine();
 
                 serviceHost.Close();
