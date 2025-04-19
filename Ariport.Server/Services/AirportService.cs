@@ -42,6 +42,7 @@ namespace Ariport.Server.Services
             var flights = await _flightRepository.GetAll();
             return flights.Select(f => new FlightDTO
             {
+                Id = f.Id,
                 FlightFrom = f.FlightFrom,
                 FlightTo = f.FlightTo,
                 DepartureDate = f.DepartureDate,
@@ -106,16 +107,35 @@ namespace Ariport.Server.Services
 
         #region AirplaneTicket
 
-        public async Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId)
+        public async Task<Guid> PurchaseTicketAsync(TicketPurchaseDTO ticketPurchaseDto)
         {
-             return await _airplaneTicketRepository.Add(new AirplaneTicket
+            var existingPassenger = (await _passengerRepository.GetAll())
+                .FirstOrDefault(p => p.Pesel == ticketPurchaseDto.PassengerPesel);
+
+            if (existingPassenger == null)
+            {
+                existingPassenger = new Passenger
+                {
+                    Id = Guid.NewGuid(),
+                    Name = ticketPurchaseDto.PassengerName,
+                    Surname = ticketPurchaseDto.PassengerSurname,
+                    Pesel = ticketPurchaseDto.PassengerPesel
+                };
+
+                await _passengerRepository.Add(existingPassenger);
+            }
+
+            var ticket = new AirplaneTicket
             {
                 Id = Guid.NewGuid(),
-                FlightID = flightId,
-                PassengerID = passengerId,
-                Status = TicketStatus.Purchased
-            });
+                FlightID = ticketPurchaseDto.FlightId,
+                PassengerID = existingPassenger.Id,
+                Status = TicketStatus.Reserved
+            };
+
+            return await _airplaneTicketRepository.Add(ticket);
         }
+
 
         public async Task<List<AirplaneTicketDto>> GetPassengerTickets(Guid passengerId)
         {
@@ -133,6 +153,27 @@ namespace Ariport.Server.Services
                 ArrivalDate = x.Flight.ArrivalDate,
                 Status = x.Status
             }).ToList();
+        }
+
+        public async Task<AirplaneTicketDto> GetTicketByIdAsync(Guid ticketId)
+        {
+            var ticket = await _airplaneTicketRepository.GetTicketDetailsByIdAsync(ticketId);
+
+            if (ticket == null)
+                return null;
+
+            return new AirplaneTicketDto
+            {
+                Id = ticket.Id,
+                Name = ticket.Passenger.Name,
+                Surname = ticket.Passenger.Surname,
+                Pesel = ticket.Passenger.Pesel,
+                FlightFrom = ticket.Flight.FlightFrom,
+                FlightTo = ticket.Flight.FlightTo,
+                DepartureDate = ticket.Flight.DepartureDate,
+                ArrivalDate = ticket.Flight.ArrivalDate,
+                Status = ticket.Status
+            };
         }
 
         #endregion

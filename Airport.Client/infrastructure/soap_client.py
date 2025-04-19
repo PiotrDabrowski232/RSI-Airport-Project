@@ -8,20 +8,32 @@ def initialize_soap_client():
     try:
         client = zeep.Client(wsdl=config.BASE_WSDL, transport=session)
         print("Pomyślnie połączono z serwisem WCF i załadowano WSDL.")
+
         flight_service = client.service
+        passenger_service = None
+        ticket_service = None
 
         if not client.wsdl.services:
              raise Exception("WSDL nie zawiera definicji żadnego serwisu.")
 
+        service_name = list(client.wsdl.services.values())[0].name
+        print(f"Znaleziono nazwę serwisu: {service_name}")
+
         try:
-            passenger_service = client.bind(config.SERVICE_NAME, config.PASSENGER_SERVICE_PORT_NAME)
+            passenger_service = client.bind(service_name, config.PASSENGER_SERVICE_PORT_NAME)
             print(f"Pomyślnie powiązano z portem: {config.PASSENGER_SERVICE_PORT_NAME}")
         except Exception as bind_error:
-             print(f"OSTRZEŻENIE: Nie udało się jawnie powiązać z portem '{config.PASSENGER_SERVICE_PORT_NAME}': {bind_error}")
              raise Exception(f"Krytyczny błąd: Nie można powiązać z portem {config.PASSENGER_SERVICE_PORT_NAME}. {bind_error}") from bind_error
 
+        try:
+            ticket_service = client.bind(service_name, config.TICKET_SERVICE_PORT_NAME)
+            print(f"Pomyślnie powiązano z portem: {config.TICKET_SERVICE_PORT_NAME}")
+        except Exception as bind_error:
+             raise Exception(f"Krytyczny błąd: Nie można powiązać z portem {config.TICKET_SERVICE_PORT_NAME}. {bind_error}") from bind_error
+
+
         print("Inicjalizacja klienta SOAP zakończona.")
-        return flight_service, passenger_service
+        return client, flight_service, passenger_service, ticket_service
 
     except (TransportError, ConnectionError) as e:
         print(f"Błąd połączenia SOAP: {e}")

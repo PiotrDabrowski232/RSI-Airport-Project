@@ -1,23 +1,21 @@
-from datetime import datetime
 from tkinter import messagebox, simpledialog
+from datetime import datetime
 
-def show_error(title, message):
-    messagebox.showerror(title, message)
+def show_error(title, message, **kwargs):
+    """Wyświetla okno błędu, przekazując dodatkowe argumenty."""
+    messagebox.showerror(title, message, **kwargs)
 
-def show_info(title, message):
-    messagebox.showinfo(title, message)
+def show_info(title, message, **kwargs): # <--- Upewnij się, że jest **kwargs
+    """Wyświetla okno informacyjne, przekazując dodatkowe argumenty."""
+    messagebox.showinfo(title, message, **kwargs) # <--- Upewnij się, że **kwargs jest przekazywane
 
-def show_warning(title, message):
-    messagebox.showwarning(title, message)
+def show_warning(title, message, **kwargs): # <--- Upewnij się, że jest **kwargs
+    """Wyświetla okno ostrzeżenia, przekazując dodatkowe argumenty."""
+    messagebox.showwarning(title, message, **kwargs) # <--- Upewnij się, że **kwargs jest przekazywane
 
-def ask_string(title, prompt):
-    return simpledialog.askstring(title, prompt)
-
-# ui/utils.py
-# ... inne importy ...
-# BRAKUJE: from datetime import datetime
-
-# ... definicje show_error, etc ...
+def ask_string(title, prompt, **kwargs): # <--- simpledialog.askstring też akceptuje np. parent
+    """Wyświetla okno dialogowe do wpisania tekstu."""
+    return simpledialog.askstring(title, prompt, **kwargs) # <--- Upewnij się, że **kwargs jest przekazywane
 
 def format_datetime(dt):
     """Bezpiecznie formatuje datę/czas lub zwraca 'B/D'."""
