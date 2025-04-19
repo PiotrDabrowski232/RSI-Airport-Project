@@ -8,8 +8,10 @@ using Ariport.Server.Data.DTOs;
 using Ariport.Server.Repositories;
 using Ariport.Server.Repositories.Interfaces;
 using Ariport.Server.Services.Interfaces;
+using IronPdf;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,7 +23,7 @@ namespace Ariport.Server.Services
         private readonly IFlightRepository _flightRepository;
         private readonly IPassengerRepository _passengerRepository;
         private readonly IAirplaneTicketRepository _airplaneTicketRepository;
-
+        const string TeplatePath = "~/Templates/BoughtTicket.html";
         public AirportService()
         {
             var context = new AirportDbContext();
@@ -64,8 +66,31 @@ namespace Ariport.Server.Services
 
         public async Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId)
         {
-            // Implementacja generowania PDF
-            throw new NotImplementedException();
+            string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "BoughtTicket.html");
+
+            if (!File.Exists(templatePath))
+                throw new FileNotFoundException("Plik szablonu PDF nie został znaleziony.", templatePath);
+
+            var result = await GetTicketByIdAsync(ticketId);
+
+            string HTMLFile = File.ReadAllText(TeplatePath);
+
+            string output = HTMLFile
+                .Replace("{TicketId}", result.Id.ToString())
+                .Replace("{FirstName}", result.Name)
+                .Replace("{LastName}", result.Surname)
+                .Replace("{PESEL}", result.Pesel)
+                .Replace("{FlightFrom}", result.FlightFrom)
+                .Replace("{FlightTo}", result.FlightTo)
+                .Replace("{DepartureDate}", result.DepartureDate.ToString("yyyy-MM-dd"))
+                .Replace("{ArrivalDate}", result.ArrivalDate.ToString("yyyy-MM-dd"))
+                .Replace("{Status}", Enum.GetName(typeof(TicketStatus) ,result.Status));
+
+            var renderer = new ChromePdfRenderer(); 
+            var pdfDoc = renderer.RenderHtmlAsPdf(output);
+            byte[] pdfBytes = pdfDoc.BinaryData;
+
+            return pdfBytes;
         }
         #endregion
 
