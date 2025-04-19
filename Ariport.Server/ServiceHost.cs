@@ -22,6 +22,7 @@ namespace Ariport.Server
             {
                 serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
                 serviceHost.AddServiceEndpoint(typeof(IPassengerService), binding, "PassengerService");
+                serviceHost.AddServiceEndpoint(typeof(IAirplaneTicketService), binding, "TicketService");
 
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                 {

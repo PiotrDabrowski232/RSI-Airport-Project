@@ -6,6 +6,9 @@ namespace Airport.Server.DTOs
     public class FlightDTO
     {
         [DataMember]
+        public Guid Id { get; set; }
+
+        [DataMember]
         public string FlightFrom { get; set; }
 
         [DataMember]
