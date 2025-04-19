@@ -26,5 +26,13 @@ namespace Ariport.Server.Repositories
                     Flight = x.Flight
                 }).ToListAsync();
         }
+        public async Task<AirplaneTicket> GetTicketDetailsByIdAsync(Guid ticketId)
+        {
+            return await _context.AirplaneTickets
+                .Include(x => x.Passenger)
+                .Include(x => x.Flight)
+                .FirstOrDefaultAsync(x => x.Id == ticketId);
+        }
+
     }
 }

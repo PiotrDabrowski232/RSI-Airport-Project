@@ -1,4 +1,5 @@
-﻿using Ariport.Server.Data.DTOs;
+﻿using Airport.Server.DTOs;
+using Ariport.Server.Data.DTOs;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
@@ -9,12 +10,14 @@ namespace Ariport.Server.Services.Interfaces
     [ServiceContract]
     public interface IAirplaneTicketService
     {
-
         [OperationContract]
-        Task<Guid> PurchaseTicketAsync(Guid flightId, Guid passengerId);
-
+        Task<Guid> PurchaseTicketAsync(TicketPurchaseDTO ticketPurchaseDto);
 
         [OperationContract]
         Task<List<AirplaneTicketDto>> GetPassengerTickets(Guid passengerId);
+
+        [OperationContract]
+        Task<AirplaneTicketDto> GetTicketByIdAsync(Guid ticketId);
     }
+
 }
