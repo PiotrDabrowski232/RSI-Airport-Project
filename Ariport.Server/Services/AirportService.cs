@@ -23,7 +23,7 @@ namespace Ariport.Server.Services
         private readonly IFlightRepository _flightRepository;
         private readonly IPassengerRepository _passengerRepository;
         private readonly IAirplaneTicketRepository _airplaneTicketRepository;
-        const string TeplatePath = "~/Templates/BoughtTicket.html";
+        private static readonly string TemplatePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.FullName, "Templates", "BoughtTicket.html");
         public AirportService()
         {
             var context = new AirportDbContext();
@@ -66,31 +66,41 @@ namespace Ariport.Server.Services
 
         public async Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId)
         {
-            string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "BoughtTicket.html");
+            try
+            {
+                if (!File.Exists(TemplatePath))
+                    throw new FileNotFoundException("Plik szablonu PDF nie został znaleziony.", TemplatePath);
 
-            if (!File.Exists(templatePath))
-                throw new FileNotFoundException("Plik szablonu PDF nie został znaleziony.", templatePath);
+                var result = await GetTicketByIdAsync(ticketId);
 
-            var result = await GetTicketByIdAsync(ticketId);
+                string HTMLFile = File.ReadAllText(TemplatePath);
 
-            string HTMLFile = File.ReadAllText(TeplatePath);
+                string output = HTMLFile
+                    .Replace("{{TicketID}}", result.Id.ToString())
+                    .Replace("{{FirstName}}", result.Name)
+                    .Replace("{{LastName}}", result.Surname)
+                    .Replace("{{PESEL}}", result.Pesel)
+                    .Replace("{{FlightFrom}}", result.FlightFrom)
+                    .Replace("{{FlightTo}}", result.FlightTo)
+                    .Replace("{{DepartureDate}}", result.DepartureDate.ToString("yyyy-MM-dd"))
+                    .Replace("{{ArrivalDate}}", result.ArrivalDate.ToString("yyyy-MM-dd"))
+                    .Replace("{{Status}}", Enum.GetName(typeof(TicketStatus), result.Status));
 
-            string output = HTMLFile
-                .Replace("{TicketId}", result.Id.ToString())
-                .Replace("{FirstName}", result.Name)
-                .Replace("{LastName}", result.Surname)
-                .Replace("{PESEL}", result.Pesel)
-                .Replace("{FlightFrom}", result.FlightFrom)
-                .Replace("{FlightTo}", result.FlightTo)
-                .Replace("{DepartureDate}", result.DepartureDate.ToString("yyyy-MM-dd"))
-                .Replace("{ArrivalDate}", result.ArrivalDate.ToString("yyyy-MM-dd"))
-                .Replace("{Status}", Enum.GetName(typeof(TicketStatus) ,result.Status));
+                var renderer = new ChromePdfRenderer();
+                var pdfDoc = renderer.RenderHtmlAsPdf(output);
+                byte[] pdfBytes = pdfDoc.BinaryData;
 
-            var renderer = new ChromePdfRenderer(); 
-            var pdfDoc = renderer.RenderHtmlAsPdf(output);
-            byte[] pdfBytes = pdfDoc.BinaryData;
+                //Później do usunięcia
+                //Na potrzebe testów żeby sprawdzić wygenerowany pliczek
+                //W razie testów odkomentowac i zmienić ścieżkę
+                //File.WriteAllBytes("C:\\Users\\Piotr\\Desktop\\files\\PotwierdzenieBiletu.pdf", pdfBytes);
 
-            return pdfBytes;
+                return pdfBytes;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception();
+            }
         }
         #endregion
 
