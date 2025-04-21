@@ -82,8 +82,8 @@ namespace Ariport.Server.Services
                     .Replace("{{PESEL}}", result.Pesel)
                     .Replace("{{FlightFrom}}", result.FlightFrom)
                     .Replace("{{FlightTo}}", result.FlightTo)
-                    .Replace("{{DepartureDate}}", result.DepartureDate.ToString("yyyy-MM-dd"))
-                    .Replace("{{ArrivalDate}}", result.ArrivalDate.ToString("yyyy-MM-dd"))
+                    .Replace("{{DepartureDate}}", result.DepartureDate.ToString("yyyy-MM-dd HH:mm"))
+                    .Replace("{{ArrivalDate}}", result.ArrivalDate.ToString("yyyy-MM-dd HH:mm"))
                     .Replace("{{Status}}", Enum.GetName(typeof(TicketStatus), result.Status));
 
                 var renderer = new ChromePdfRenderer();
@@ -92,7 +92,7 @@ namespace Ariport.Server.Services
 
                 //Później do usunięcia
                 //Na potrzebe testów żeby sprawdzić wygenerowany pliczek
-                //W razie testów odkomentowac i zmienić ścieżkę
+                //W razie testów odkomentowac i zmienić ścieżkę docelową zapisu pliku
                 //File.WriteAllBytes("C:\\Users\\Piotr\\Desktop\\files\\PotwierdzenieBiletu.pdf", pdfBytes);
 
                 return pdfBytes;
