@@ -34,5 +34,6 @@ namespace Airport.Server.Repositories
 
             return await query.ToListAsync();
         }
+
     }
 }
