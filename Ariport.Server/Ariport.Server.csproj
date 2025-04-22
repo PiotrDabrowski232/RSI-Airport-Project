@@ -288,6 +288,8 @@
     <Compile Include="Data\Models\AirplaneTicket.cs" />
     <Compile Include="Data\Models\Flight.cs" />
     <Compile Include="Data\Models\Passenger.cs" />
+    <Compile Include="Handlers\ErrorHandler\GlobalErrorHandler.cs" />
+    <Compile Include="Handlers\ErrorHandler\GlobalErrorHandlerBehavior.cs" />
     <Compile Include="Handlers\SoapMessageLogger.cs" />
     <Compile Include="Migrations\202504152044515_init.cs" />
     <Compile Include="Migrations\202504152044515_init.Designer.cs">

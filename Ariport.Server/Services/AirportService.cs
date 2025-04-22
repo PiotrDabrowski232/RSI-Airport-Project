@@ -41,27 +41,43 @@ namespace Ariport.Server.Services
         #region FlightService
         public async Task<List<FlightDTO>> GetFlightsAsync()
         {
-            var flights = await _flightRepository.GetAll();
-            return flights.Select(f => new FlightDTO
+            try
             {
-                Id = f.Id,
-                FlightFrom = f.FlightFrom,
-                FlightTo = f.FlightTo,
-                DepartureDate = f.DepartureDate,
-                ArrivalDate = f.ArrivalDate
-            }).ToList();
+                var flights = await _flightRepository.GetAll();
+                return flights.Select(f => new FlightDTO
+                {
+                    Id = f.Id,
+                    FlightFrom = f.FlightFrom,
+                    FlightTo = f.FlightTo,
+                    DepartureDate = f.DepartureDate,
+                    ArrivalDate = f.ArrivalDate
+                }).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Nie można pobrać lotów. Spróbuj ponownie później");
+            }
         }
 
         public async Task<List<FlightDTO>> SearchFlightsAsync(string from, string to, DateTime? departureDate)
         {
-            var flights = await _flightRepository.SearchAsync(from, to, departureDate);
-            return flights.Select(f => new FlightDTO
+            try
             {
-                FlightFrom = f.FlightFrom,
-                FlightTo = f.FlightTo,
-                DepartureDate = f.DepartureDate,
-                ArrivalDate = f.ArrivalDate
-            }).ToList();
+                var flights = await _flightRepository.SearchAsync(from, to, departureDate);
+                return flights.Select(f => new FlightDTO
+                {
+                    FlightFrom = f.FlightFrom,
+                    FlightTo = f.FlightTo,
+                    DepartureDate = f.DepartureDate,
+                    ArrivalDate = f.ArrivalDate
+                }).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Nie można pobrać lotów. Spróbuj ponownie później");
+            }
         }
 
         public async Task<byte[]> GetTicketConfirmationPdfAsync(Guid ticketId)
@@ -90,16 +106,11 @@ namespace Ariport.Server.Services
                 var pdfDoc = renderer.RenderHtmlAsPdf(output);
                 byte[] pdfBytes = pdfDoc.BinaryData;
 
-                //Później do usunięcia
-                //Na potrzebe testów żeby sprawdzić wygenerowany pliczek
-                //W razie testów odkomentowac i zmienić ścieżkę docelową zapisu pliku
-                //File.WriteAllBytes("C:\\Users\\Piotr\\Desktop\\files\\PotwierdzenieBiletu.pdf", pdfBytes);
-
                 return pdfBytes;
             }
             catch (Exception ex)
             {
-                throw new Exception();
+                throw new ArgumentException("Nie można wygenerować PDF. Spróbuj ponownie później");
             }
         }
         #endregion
@@ -108,35 +119,58 @@ namespace Ariport.Server.Services
 
         public async Task<List<PassengerDTO>> GetPassengers()
         {
-            var resut = await _passengerRepository.GetAll();
-            return resut.Select(x => new PassengerDTO
+            try
             {
-                Name = x.Name,
-                Surname = x.Surname,
-                Pesel = x.Pesel
-            }).ToList();
+                var resut = await _passengerRepository.GetAll();
+                return resut.Select(x => new PassengerDTO
+                {
+                    Name = x.Name,
+                    Surname = x.Surname,
+                    Pesel = x.Pesel
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Nie można pobrać użytkowników. Spróbuj ponownie później");
+            }
         }
 
         public async Task<PassengerDTO> GetPassenger(Guid id)
         {
-            var result = await _passengerRepository.GetById(id);
-            return new PassengerDTO
+            try
             {
-                Name = result.Name,
-                Surname = result.Surname,
-                Pesel = result.Pesel
-            };
+                var result = await _passengerRepository.GetById(id);
+                return new PassengerDTO
+                {
+                    Name = result.Name,
+                    Surname = result.Surname,
+                    Pesel = result.Pesel
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Podany użytkownik nie istnieje");
+            }
         }
 
         public async Task<Guid> CreatePassenger(string name, string surname, string pesel)
         {
-            return await _passengerRepository.Add(new Passenger
+            try
             {
-                Id = Guid.NewGuid(),
-                Name = name,
-                Surname = surname,
-                Pesel = pesel
-            });
+
+                return await _passengerRepository.Add(new Passenger
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    Surname = surname,
+                    Pesel = pesel
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Nie można dodać użytkownika. Spróbuj ponownie później");
+            }
         }
         #endregion
 
@@ -144,71 +178,94 @@ namespace Ariport.Server.Services
 
         public async Task<Guid> PurchaseTicketAsync(TicketPurchaseDTO ticketPurchaseDto)
         {
-            var existingPassenger = (await _passengerRepository.GetAll())
-                .FirstOrDefault(p => p.Pesel == ticketPurchaseDto.PassengerPesel);
-
-            if (existingPassenger == null)
+            try
             {
-                existingPassenger = new Passenger
+                var existingPassenger = (await _passengerRepository.GetAll())
+                    .FirstOrDefault(p => p.Pesel == ticketPurchaseDto.PassengerPesel);
+
+                if (existingPassenger == null)
+                {
+                    existingPassenger = new Passenger
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = ticketPurchaseDto.PassengerName,
+                        Surname = ticketPurchaseDto.PassengerSurname,
+                        Pesel = ticketPurchaseDto.PassengerPesel
+                    };
+
+                    await _passengerRepository.Add(existingPassenger);
+                }
+
+                var ticket = new AirplaneTicket
                 {
                     Id = Guid.NewGuid(),
-                    Name = ticketPurchaseDto.PassengerName,
-                    Surname = ticketPurchaseDto.PassengerSurname,
-                    Pesel = ticketPurchaseDto.PassengerPesel
+                    FlightID = ticketPurchaseDto.FlightId,
+                    PassengerID = existingPassenger.Id,
+                    Status = TicketStatus.Reserved
                 };
 
-                await _passengerRepository.Add(existingPassenger);
+                return await _airplaneTicketRepository.Add(ticket);
+
             }
-
-            var ticket = new AirplaneTicket
+            catch (Exception ex)
             {
-                Id = Guid.NewGuid(),
-                FlightID = ticketPurchaseDto.FlightId,
-                PassengerID = existingPassenger.Id,
-                Status = TicketStatus.Reserved
-            };
-
-            return await _airplaneTicketRepository.Add(ticket);
+                throw new ArgumentException("Nie można zakupić biletu. Spróbuj ponownie później");
+            }
         }
 
 
         public async Task<List<AirplaneTicketDto>> GetPassengerTickets(Guid passengerId)
         {
-            var result = await _airplaneTicketRepository.PassengerTickets(passengerId);
-
-            return result.Select(x => new AirplaneTicketDto
+            try
             {
-                Id = x.Id,
-                Name = x.Passenger.Name,
-                Surname = x.Passenger.Surname,
-                Pesel = x.Passenger.Pesel,
-                FlightFrom = x.Flight.FlightFrom,
-                FlightTo = x.Flight.FlightTo,
-                DepartureDate = x.Flight.DepartureDate,
-                ArrivalDate = x.Flight.ArrivalDate,
-                Status = x.Status
-            }).ToList();
+                var result = await _airplaneTicketRepository.PassengerTickets(passengerId);
+
+                return result.Select(x => new AirplaneTicketDto
+                {
+                    Id = x.Id,
+                    Name = x.Passenger.Name,
+                    Surname = x.Passenger.Surname,
+                    Pesel = x.Passenger.Pesel,
+                    FlightFrom = x.Flight.FlightFrom,
+                    FlightTo = x.Flight.FlightTo,
+                    DepartureDate = x.Flight.DepartureDate,
+                    ArrivalDate = x.Flight.ArrivalDate,
+                    Status = x.Status
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Nie można pobrać biletów. Spróbuj ponownie później");
+            }
         }
 
         public async Task<AirplaneTicketDto> GetTicketByIdAsync(Guid ticketId)
         {
-            var ticket = await _airplaneTicketRepository.GetTicketDetailsByIdAsync(ticketId);
-
-            if (ticket == null)
-                return null;
-
-            return new AirplaneTicketDto
+            try
             {
-                Id = ticket.Id,
-                Name = ticket.Passenger.Name,
-                Surname = ticket.Passenger.Surname,
-                Pesel = ticket.Passenger.Pesel,
-                FlightFrom = ticket.Flight.FlightFrom,
-                FlightTo = ticket.Flight.FlightTo,
-                DepartureDate = ticket.Flight.DepartureDate,
-                ArrivalDate = ticket.Flight.ArrivalDate,
-                Status = ticket.Status
-            };
+                var ticket = await _airplaneTicketRepository.GetTicketDetailsByIdAsync(ticketId);
+
+                if (ticket == null)
+                    return null;
+
+                return new AirplaneTicketDto
+                {
+                    Id = ticket.Id,
+                    Name = ticket.Passenger.Name,
+                    Surname = ticket.Passenger.Surname,
+                    Pesel = ticket.Passenger.Pesel,
+                    FlightFrom = ticket.Flight.FlightFrom,
+                    FlightTo = ticket.Flight.FlightTo,
+                    DepartureDate = ticket.Flight.DepartureDate,
+                    ArrivalDate = ticket.Flight.ArrivalDate,
+                    Status = ticket.Status
+                };
+
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Nie można pobrać biletu. Spróbuj ponownie później");
+            }
         }
 
         #endregion

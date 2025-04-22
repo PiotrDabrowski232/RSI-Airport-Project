@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using Ariport.Server.Handlers.ErrorHandler;
 using Ariport.Server.Services;
 using Ariport.Server.Services.Interfaces;
 
@@ -24,12 +25,14 @@ namespace Ariport.Server
                 serviceHost.AddServiceEndpoint(typeof(IPassengerService), binding, "PassengerService");
                 serviceHost.AddServiceEndpoint(typeof(IAirplaneTicketService), binding, "TicketService");
 
+
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                 {
                     HttpGetEnabled = true,
                     MetadataExporter = { PolicyVersion = PolicyVersion.Policy15 }
                 };
                 serviceHost.Description.Behaviors.Add(smb);
+                serviceHost.Description.Behaviors.Add(new GlobalErrorHandlerBehavior());
 
                 serviceHost.AddServiceEndpoint(
                     typeof(IMetadataExchange),
