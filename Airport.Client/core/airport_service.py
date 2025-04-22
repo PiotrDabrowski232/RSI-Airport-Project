@@ -120,11 +120,11 @@ class AirportApiService:
             raise ValueError("ID biletu jest wymagane.")
         try:
             print(f"API: Żądanie PDF dla biletu ID: {ticket_id}")
-            pdf_base64 = self.flight_service.GetTicketConfirmationPdf(ticketId=str(ticket_id))
-            if pdf_base64:
-                print(f"API: Otrzymano dane PDF (base64).")
-                pdf_bytes = base64.b64decode(pdf_base64)
-                return pdf_bytes
+            pdf_data = self.flight_service.GetTicketConfirmationPdf(ticketId=str(ticket_id))
+
+            if pdf_data:
+                print(f"API: Otrzymano dane PDF (typ: {type(pdf_data)}).")
+                return pdf_data
             else:
                  print(f"API: Nie otrzymano danych PDF dla biletu ID: {ticket_id}")
                  return None
