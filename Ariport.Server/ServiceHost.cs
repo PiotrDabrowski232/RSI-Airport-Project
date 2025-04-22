@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using Ariport.Server.Handlers;
 using Ariport.Server.Services;
 using Ariport.Server.Services.Interfaces;
 
@@ -20,9 +21,9 @@ namespace Ariport.Server
 
             using (var serviceHost = new System.ServiceModel.ServiceHost(typeof(AirportService), baseAddress))
             {
-                serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
-                serviceHost.AddServiceEndpoint(typeof(IPassengerService), binding, "PassengerService");
-                serviceHost.AddServiceEndpoint(typeof(IAirplaneTicketService), binding, "TicketService");
+                var flightEndpoint = serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
+                var passengerEndpoint = serviceHost.AddServiceEndpoint(typeof(IPassengerService), binding, "PassengerService");
+                var ticketEndpoint = serviceHost.AddServiceEndpoint(typeof(IAirplaneTicketService), binding, "TicketService");
 
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                 {
@@ -35,6 +36,10 @@ namespace Ariport.Server
                     typeof(IMetadataExchange),
                     MetadataExchangeBindings.CreateMexHttpBinding(),
                     "mex");
+                var loggingBehavior = new SoapMessageLoggerBehavior();
+                flightEndpoint.Behaviors.Add(loggingBehavior);
+                passengerEndpoint.Behaviors.Add(loggingBehavior);
+                ticketEndpoint.Behaviors.Add(loggingBehavior);
 
                 serviceHost.Open();
 
