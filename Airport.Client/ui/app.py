@@ -10,7 +10,7 @@ from ui import utils
 class AirportClientApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Klient Serwisu Lotniska (SOAP) - Refactored")
+        self.root.title("Klient Serwisu Lotniska (SOAP)")
         self.client = None
         self.api_service = None
         if not self._initialize_services():

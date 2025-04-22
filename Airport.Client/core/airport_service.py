@@ -1,6 +1,6 @@
-from datetime import datetime
 import uuid
-from zeep.exceptions import Fault, ValidationError
+from zeep.exceptions import Fault, ValidationError, TransportError
+import base64
 
 class AirportApiService:
     def __init__(self, flight_svc, passenger_svc, ticket_svc, client):
@@ -99,23 +99,44 @@ class AirportApiService:
             raise ValueError("ID biletu jest wymagane.")
         try:
             print(f"API: Pobieranie biletu o ID: {ticket_id}")
-            # Sprawdź nazwę parametru w WSDL ('ticketId'?)
             ticket_dto = self.ticket_service.GetTicketById(ticketId=str(ticket_id))
             if ticket_dto:
                  print(f"API: Znaleziono bilet.")
             else:
                  print(f"API: Nie znaleziono biletu o ID: {ticket_id}")
-            return ticket_dto # Zwraca obiekt DTO lub None
+            return ticket_dto
         except AttributeError as ae:
              print(f"Błąd metody (get_ticket_by_id): {ae}")
              raise RuntimeError(f"Wewnętrzny błąd: Metoda 'GetTicketById' niedostępna. {ae}") from ae
         except Fault as f:
             print(f"Błąd SOAP podczas GetTicketById: {f.message}")
-            # Specjalna obsługa, jeśli serwer rzuca Fault gdy nie znajdzie? Zależy od implementacji serwera.
-            # Jeśli Fault oznacza "nie znaleziono", można zwrócić None.
-            # if "not found" in f.message.lower(): # Przykładowe sprawdzenie
-            #     return None
-            raise # Domyślnie przekazujemy błąd SOAP wyżej
+            raise
         except Exception as e:
              print(f"Nieoczekiwany błąd podczas get_ticket_by_id: {e}")
+             raise
+
+    def get_ticket_pdf(self, ticket_id: uuid.UUID):
+        if not ticket_id:
+            raise ValueError("ID biletu jest wymagane.")
+        try:
+            print(f"API: Żądanie PDF dla biletu ID: {ticket_id}")
+            pdf_data = self.flight_service.GetTicketConfirmationPdf(ticketId=str(ticket_id))
+
+            if pdf_data:
+                print(f"API: Otrzymano dane PDF (typ: {type(pdf_data)}).")
+                return pdf_data
+            else:
+                 print(f"API: Nie otrzymano danych PDF dla biletu ID: {ticket_id}")
+                 return None
+        except AttributeError as ae:
+             print(f"Błąd metody (get_ticket_pdf): {ae}")
+             raise RuntimeError(f"Wewnętrzny błąd: Metoda 'GetTicketConfirmationPdf' niedostępna w serwisie lotów (flight_service). {ae}") from ae
+        except Fault as f:
+            print(f"Błąd SOAP podczas GetTicketConfirmationPdf: {f.message}")
+            raise
+        except (TransportError, ConnectionError) as te:
+             print(f"Błąd transportu/połączenia podczas GetTicketConfirmationPdf: {te}")
+             raise ConnectionError(f"Błąd połączenia podczas pobierania PDF. {te}") from te
+        except Exception as e:
+             print(f"Nieoczekiwany błąd podczas get_ticket_pdf: {e}")
              raise
