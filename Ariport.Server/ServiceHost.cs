@@ -11,14 +11,14 @@ namespace Ariport.Server
     {
         public static void Main()
         {
-            Uri baseAddress = new Uri("http://localhost:8080/Airport/");
+            Uri baseAddress = new Uri("https://localhost:8443/Airport/");
 
-            var binding = new WSHttpBinding(SecurityMode.None)
+            var binding = new WSHttpBinding(SecurityMode.Transport)
             {
                 MessageEncoding = WSMessageEncoding.Mtom,
                 MaxReceivedMessageSize = 10485760
             };
-
+            binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
             using (var serviceHost = new System.ServiceModel.ServiceHost(typeof(AirportService), baseAddress))
             {
                 var flightEndpoint = serviceHost.AddServiceEndpoint(typeof(IFlightService), binding, "FlightService");
@@ -27,15 +27,17 @@ namespace Ariport.Server
 
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                 {
-                    HttpGetEnabled = true,
+                    HttpsGetEnabled = true,
+                    HttpGetEnabled = false,
                     MetadataExporter = { PolicyVersion = PolicyVersion.Policy15 }
                 };
                 serviceHost.Description.Behaviors.Add(smb);
 
                 serviceHost.AddServiceEndpoint(
-                    typeof(IMetadataExchange),
-                    MetadataExchangeBindings.CreateMexHttpBinding(),
+                    ServiceMetadataBehavior.MexContractName,
+                    MetadataExchangeBindings.CreateMexHttpsBinding(),
                     "mex");
+
                 var loggingBehavior = new SoapMessageLoggerBehavior();
                 flightEndpoint.Behaviors.Add(loggingBehavior);
                 passengerEndpoint.Behaviors.Add(loggingBehavior);

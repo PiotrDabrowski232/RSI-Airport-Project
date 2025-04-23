@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/rootCA.key
+/rootCA.srl
+/server.crt
+/server.csr
+/server.key
+/openssl_server.cnf
