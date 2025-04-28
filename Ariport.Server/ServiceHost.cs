@@ -12,7 +12,7 @@ namespace Ariport.Server
     {
         public static void Main()
         {
-            Uri baseAddress = new Uri("https://localhost:8443/Airport/");
+            Uri baseAddress = new Uri("https://172.20.10.3:8443/Airport/");
 
             var binding = new WSHttpBinding(SecurityMode.Transport)
             {

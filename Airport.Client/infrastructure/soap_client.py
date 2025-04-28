@@ -13,19 +13,12 @@ def initialize_soap_client():
     try:
         if not os.path.exists(ca_cert_path):
              raise FileNotFoundError(f"Plik certyfikatu CA nie istnieje: {ca_cert_path}")
-
-        # --- KROK 1: Stwórz i skonfiguruj sesję requests ---
         req_session = requests.Session()
         req_session.verify = ca_cert_path
         print(f"Requests Session skonfigurowana do weryfikacji za pomocą CA: {ca_cert_path}")
-        # --- Koniec Kroku 1 ---
 
-        # --- KROK 2: Przekaż skonfigurowaną sesję do zeep.Transport ---
-        # Użyj parametru 'session' w konstruktorze Transport
         session = Transport(timeout=config.REQUEST_TIMEOUT, session=req_session)
         print(f"Zeep Transport używa jawnie skonfigurowanej sesji requests.")
-        # --- Koniec Kroku 2 ---
-
     except FileNotFoundError as fnf_error:
         print(f"KRYTYCZNY BŁĄD: {fnf_error}")
         print("Upewnij się, że plik rootCA.pem znajduje się w podanej ścieżce")
@@ -36,13 +29,10 @@ def initialize_soap_client():
          raise RuntimeError(f"Nie udało się skonfigurować weryfikacji SSL: {ssl_config_error}") from ssl_config_error
 
     try:
-        # Inicjalizacja klienta zeep - używa obiektu Transport, który teraz
-        # zawiera naszą pre-konfigurowaną sesję requests
         client = zeep.Client(
             wsdl=config.BASE_WSDL,
             transport=session
         )
-        # Jeśli dojdzie tutaj bez błędu, to znaczy, że pobieranie WSDL zadziałało
         print("Pomyślnie połączono z serwisem WCF (HTTPS) i załadowano WSDL.")
 
         flight_service = client.service
@@ -73,11 +63,8 @@ def initialize_soap_client():
 
     except (TransportError, ConnectionError) as e:
         print(f"Błąd połączenia SOAP (HTTPS): {e}")
-        # Sprawdzenie błędu SSL w komunikacie może nadal być przydatne
         if 'SSL' in str(e).upper() or 'CERTIFICATE_VERIFY_FAILED' in str(e).upper():
-             print(">>> Wskazówka: Mimo że requests działa, zeep nadal ma problem z SSL.")
-             print(f">>> Sprawdź wersje bibliotek (zeep, requests, urllib3).")
-             print(f">>> Upewnij się, że WCF service na pewno działa i jest dostępny.")
+             print(f"Błąd weryfikacji certyfikatu SSL: {e}")
         raise ConnectionError(f"Nie można połączyć się z serwisem WCF (HTTPS) lub pobrać WSDL.\nURL: {config.BASE_WSDL}\nSzczegóły: {e}") from e
     except Exception as e:
         print(f"Błąd inicjalizacji SOAP (HTTPS) lub bindowania: {e}")
