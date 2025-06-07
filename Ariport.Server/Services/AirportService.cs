@@ -32,10 +32,11 @@ namespace Ariport.Server.Services
             _airplaneTicketRepository = new AirplaneTicketRepository(context);
         }
 
-        public AirportService(IFlightRepository flightRepository, IPassengerRepository passengerRepository)
+        public AirportService(IFlightRepository flightRepository, IPassengerRepository passengerRepository, IAirplaneTicketRepository airplaneTicketRepository)
         {
             _flightRepository = flightRepository;
             _passengerRepository = passengerRepository;
+            _airplaneTicketRepository = airplaneTicketRepository;
         }
 
         #region FlightService
