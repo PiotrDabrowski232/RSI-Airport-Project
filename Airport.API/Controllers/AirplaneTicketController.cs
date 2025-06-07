@@ -1,4 +1,5 @@
-﻿using Airport.Server.DTOs;
+﻿using Airport.API.Auth;
+using Airport.Server.DTOs;
 using Ariport.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +7,7 @@ namespace Airport.API.Controllers
 {
     [Route("AirplaneTicket")]
     [ApiController]
+    [BasicAuthFilter]
     public class AirplaneTicketController : ControllerBase
     {
         private readonly IAirplaneTicketService _airplaneTicketService;

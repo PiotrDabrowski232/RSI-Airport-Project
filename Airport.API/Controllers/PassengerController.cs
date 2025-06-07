@@ -1,4 +1,5 @@
-﻿using Ariport.Server.Data.DTOs;
+﻿using Airport.API.Auth;
+using Ariport.Server.Data.DTOs;
 using Ariport.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +7,7 @@ namespace Airport.API.Controllers
 {
     [Route("Passenger")]
     [ApiController]
+    [BasicAuthFilter]
     public class PassengerController : ControllerBase
     {
         private readonly IPassengerService _passengerService;
