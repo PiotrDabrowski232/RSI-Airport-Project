@@ -8,12 +8,13 @@ using Ariport.Server.Data.DTOs;
 using Ariport.Server.Repositories;
 using Ariport.Server.Repositories.Interfaces;
 using Ariport.Server.Services.Interfaces;
-using IronPdf;
+using PdfSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using TheArtOfDev.HtmlRenderer.PdfSharp;
 
 namespace Ariport.Server.Services
 {
@@ -22,7 +23,8 @@ namespace Ariport.Server.Services
         private readonly IFlightRepository _flightRepository;
         private readonly IPassengerRepository _passengerRepository;
         private readonly IAirplaneTicketRepository _airplaneTicketRepository;
-        private static readonly string TemplatePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.FullName, "Templates", "BoughtTicket.html");
+        private static readonly string TemplatePath = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory, "Templates", "BoughtTicket.html");
         public AirportService()
         {
             IronPdf.License.LicenseKey = "IRONSUITE.82675.STUDENT.PB.EDU.PL.12387-303CB909E6-DEBAPKB6VF4U33-7367W2HJ6WUD-FHE5JP7XSZM7-QQH6CMX7INFR-WHKK3OOHX26K-H4SIY2LUI37U-ALYXZP-TQ3QNO5DS3GPEA-DEPLOYMENT.TRIAL-XCXGU2.TRIAL.EXPIRES.28.MAY.2025";
@@ -86,13 +88,15 @@ namespace Ariport.Server.Services
             try
             {
                 if (!File.Exists(TemplatePath))
-                    throw new FileNotFoundException("Plik szablonu PDF nie został znaleziony.", TemplatePath);
+                    throw new FileNotFoundException("Plik szablonu HTML nie został znaleziony.", TemplatePath);
 
                 var result = await GetTicketByIdAsync(ticketId);
+                if (result == null)
+                    throw new ArgumentException("Nie znaleziono biletu o podanym ID");
 
-                string HTMLFile = File.ReadAllText(TemplatePath);
+                string htmlTemplate = File.ReadAllText(TemplatePath);
 
-                string output = HTMLFile
+                string htmlContent = htmlTemplate
                     .Replace("{{TicketID}}", result.Id.ToString())
                     .Replace("{{FirstName}}", result.Name)
                     .Replace("{{LastName}}", result.Surname)
@@ -103,17 +107,21 @@ namespace Ariport.Server.Services
                     .Replace("{{ArrivalDate}}", result.ArrivalDate.ToString("yyyy-MM-dd HH:mm"))
                     .Replace("{{Status}}", Enum.GetName(typeof(TicketStatus), result.Status));
 
-                var renderer = new ChromePdfRenderer();
-                var pdfDoc = renderer.RenderHtmlAsPdf(output);
-                byte[] pdfBytes = pdfDoc.BinaryData;
-
-                return pdfBytes;
+                using (var document = PdfGenerator.GeneratePdf(htmlContent, PageSize.A4))
+                {
+                    using (var stream = new MemoryStream())
+                    {
+                        document.Save(stream, false);
+                        return stream.ToArray();
+                    }
+                }
             }
             catch (Exception ex)
             {
                 throw new ArgumentException("Nie można wygenerować PDF. Spróbuj ponownie później");
             }
         }
+
         #endregion
 
         #region IPassengerService
