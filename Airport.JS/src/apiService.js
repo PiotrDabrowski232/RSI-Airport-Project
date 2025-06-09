@@ -21,6 +21,9 @@ export const flightService = {
     if (departureDate) params.append('departureDate', departureDate);
     
     return apiClient.get(`/Flight/Search?${params.toString()}`);
+  },
+  getFlightPdf: (flightId) => {
+    return apiClient.get(`/Flight/${flightId}/pdf`, { responseType: 'blob' });
   }
 };
 
