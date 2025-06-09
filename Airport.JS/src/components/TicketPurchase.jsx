@@ -1,22 +1,24 @@
-import { useState } from 'react';
-import { passengerService, ticketService } from '../apiService';
-import './TicketPurchase.css';
+import { useState } from "react";
+import { flightService, passengerService, ticketService } from "../apiService";
+import "./TicketPurchase.css";
+import { set } from "react-hook-form";
 
 const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
   const [passengerData, setPassengerData] = useState({
-    name: '',
-    surname: '',
-    pesel: ''
+    name: "",
+    surname: "",
+    pesel: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [purchasedTicketId, setPurchasedTicketId] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setPassengerData(prev => ({
+    setPassengerData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -27,7 +29,9 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
 
     try {
       // Najpierw stwórz pasażera
-      const passengerResponse = await passengerService.createPassenger(passengerData);
+      const passengerResponse = await passengerService.createPassenger(
+        passengerData
+      );
       const passengerId = passengerResponse.data.id;
 
       // Następnie kup bilet
@@ -39,16 +43,47 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
       };
 
       const ticketResponse = await ticketService.purchaseTicket(ticketData);
-      
+      setPurchasedTicketId(ticketResponse.data);
       setSuccess(true);
       if (onPurchaseComplete) {
         onPurchaseComplete(ticketResponse.data);
       }
     } catch (err) {
-      setError('Błąd podczas zakupu biletu: ' + err.message);
+      setError("Błąd podczas zakupu biletu: " + err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    flightService
+      .getFlightPdf(purchasedTicketId)
+      .then((response) => {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `ticket-${purchasedTicketId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch((err) => {
+        console.error("Błąd podczas pobierania PDF: ", err);
+        alert("Nie udało się pobrać biletu w formacie PDF.");
+      });
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        alert("ID biletu skopiowane do schowka!");
+      })
+      .catch((err) => {
+        console.error("Błąd kopiowania do schowka: ", err);
+        alert("Nie udało się skopiować ID biletu.");
+      });
   };
 
   if (success) {
@@ -56,10 +91,37 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
       <div className="ticket-purchase">
         <div className="success-message">
           <h2>✅ Bilet został zakupiony pomyślnie!</h2>
-          <p>Dziękujemy za zakup. Szczegóły zostały wysłane na Twój email.</p>
-          <button onClick={onBack} className="back-button">
-            Powrót do wyszukiwania
-          </button>
+          {purchasedTicketId && (
+            <div className="ticket-id-section">
+              <p>
+                <strong>ID Twojego biletu:</strong>
+              </p>
+              <div className="ticket-id-display">
+                <span>{purchasedTicketId}</span>
+                <button
+                  onClick={() => copyToClipboard(purchasedTicketId)}
+                  className="copy-button"
+                  title="Kopiuj ID biletu"
+                >
+                  📋
+                </button>
+              </div>
+              <p className="info-text">
+                Zapisz to ID, aby móc sprawdzić swoją rezerwację.
+              </p>
+            </div>
+          )}
+          <p>
+            Dziękujemy za zakup. Szczegóły zostały wysłane na Twój email
+          </p>
+          <div className="success-actions">
+            <button onClick={handleDownloadPdf} className="download-pdf-button">
+              📄 Pobierz bilet (PDF)
+            </button>
+            <button onClick={onBack} className="back-button">
+              Powrót do wyszukiwania
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -68,17 +130,25 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
   return (
     <div className="ticket-purchase">
       <h2>Zakup biletu</h2>
-      
+
       <div className="flight-summary">
         <h3>Szczegóły lotu</h3>
-        <p><strong>Trasa:</strong> {flight.flightFrom} → {flight.flightTo}</p>
-        <p><strong>Data:</strong> {new Date(flight.departureDate).toLocaleDateString()}</p>
-        <p><strong>Godzina:</strong> {new Date(flight.departureDate).toLocaleTimeString()}</p>
+        <p>
+          <strong>Trasa:</strong> {flight.flightFrom} → {flight.flightTo}
+        </p>
+        <p>
+          <strong>Data:</strong>{" "}
+          {new Date(flight.departureDate).toLocaleDateString()}
+        </p>
+        <p>
+          <strong>Godzina:</strong>{" "}
+          {new Date(flight.departureDate).toLocaleTimeString()}
+        </p>
       </div>
 
       <form onSubmit={handlePurchase} className="purchase-form">
         <h3>Dane pasażera</h3>
-        
+
         <div className="form-group">
           <label>Imię:</label>
           <input
@@ -124,7 +194,7 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
             Anuluj
           </button>
           <button type="submit" disabled={loading} className="purchase-button">
-            {loading ? 'Przetwarzanie...' : 'Kup bilet'}
+            {loading ? "Przetwarzanie..." : "Kup bilet"}
           </button>
         </div>
       </form>
