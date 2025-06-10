@@ -29,6 +29,51 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    var request = context.Request;
+    var response = context.Response;
+
+    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+    var method = request.Method;
+    var path = request.Path;
+    var userAgent = request.Headers["User-Agent"].FirstOrDefault();
+    var authHeader = request.Headers["Authorization"].FirstOrDefault();
+
+    var stopwatch = new System.Diagnostics.Stopwatch();
+    stopwatch.Start();
+
+    var originalBodyStream = response.Body;
+    await using var responseBody = new MemoryStream();
+    response.Body = responseBody;
+
+    try
+    {
+        await next.Invoke();
+
+        stopwatch.Stop();
+
+        responseBody.Seek(0, SeekOrigin.Begin);
+        var text = await new StreamReader(responseBody).ReadToEndAsync();
+        responseBody.Seek(0, SeekOrigin.Begin);
+
+        await responseBody.CopyToAsync(originalBodyStream);
+
+        logger.LogInformation(
+            "HTTP {Method} {Path} from {IP} | UA: {UA} | Auth: {Auth} | Status: {StatusCode} | Time: {Elapsed} ms | ResponseBody: {ResponseBody}",
+            method, path, ipAddress, userAgent, authHeader, response.StatusCode,
+            stopwatch.ElapsedMilliseconds, text);
+    }
+    finally
+    {
+        response.Body = originalBodyStream;
+    }
+});
+
+
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

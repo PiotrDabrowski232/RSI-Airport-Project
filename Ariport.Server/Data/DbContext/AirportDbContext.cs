@@ -10,7 +10,7 @@ namespace Airport.Server.Context
             : base(connectionString)
         {
         }
-        public AirportDbContext(): base("name=AirportServiceDbContext")
+        public AirportDbContext(): base("AirportServiceDbContext")
         {
         }
 
