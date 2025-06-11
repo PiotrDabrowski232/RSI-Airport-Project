@@ -2,6 +2,7 @@
 using Airport.Server.DTOs;
 using Ariport.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Airport.API.Controllers
 {
@@ -20,22 +21,58 @@ namespace Airport.API.Controllers
         [HttpPost("Purchase")]
         public async Task<ActionResult> PurchaseTicket([FromBody] TicketPurchaseDTO ticketPurchaseDto)
         {
-            var result = await _airplaneTicketService.PurchaseTicketAsync(ticketPurchaseDto);
-            return Ok(result);
+            try
+            {
+                var result = await _airplaneTicketService.PurchaseTicketAsync(ticketPurchaseDto);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Wystąpił błąd podczas zakupu biletu." });
+            }
         }
 
         [HttpGet("Passenger/{passengerId}")]
         public async Task<ActionResult> GetPassengerTickets(Guid passengerId)
         {
-            var result = await _airplaneTicketService.GetPassengerTickets(passengerId);
-            return Ok(result);
+            try
+            {
+                var result = await _airplaneTicketService.GetPassengerTickets(passengerId);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Wystąpił błąd podczas pobierania biletów pasażera." });
+            }
         }
 
         [HttpGet("{ticketId}")]
         public async Task<ActionResult> GetTicketById(Guid ticketId)
         {
-            var result = await _airplaneTicketService.GetTicketByIdAsync(ticketId);
-            return Ok(result);
+            try
+            {
+                var result = await _airplaneTicketService.GetTicketByIdAsync(ticketId);
+                if (result == null)
+                    return NotFound(new { message = "Bilet nie został znaleziony." });
+
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Wystąpił błąd podczas pobierania biletu." });
+            }
         }
     }
 }
