@@ -309,8 +309,10 @@
     <Compile Include="Data\DbContext\AirportDbContext.cs" />
     <Compile Include="Data\DTOs\AirplaneTicketDto.cs" />
     <Compile Include="Data\DTOs\FlightDTO.cs" />
+    <Compile Include="Data\DTOs\Link.cs" />
     <Compile Include="Data\DTOs\PassengerDTO.cs" />
     <Compile Include="Data\DTOs\TicketPurchaseDTO.cs" />
+    <Compile Include="Data\DTOs\TicketResource.cs" />
     <Compile Include="Data\Enum\TicketStatus.cs" />
     <Compile Include="Data\ModelsConfig\AirplaneTicketConfiguration.cs" />
     <Compile Include="Data\ModelsConfig\FlightConfiguration.cs" />

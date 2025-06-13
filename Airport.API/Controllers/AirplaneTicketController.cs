@@ -1,5 +1,6 @@
 ﻿using Airport.API.Auth;
 using Airport.Server.DTOs;
+using Ariport.Server.Data.DTOs;
 using Ariport.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -24,7 +25,18 @@ namespace Airport.API.Controllers
             try
             {
                 var result = await _airplaneTicketService.PurchaseTicketAsync(ticketPurchaseDto);
-                return Ok(result);
+
+                var resource = new TicketResource
+                {
+                    TicketID = result,
+                    Links = new List<Link>
+                    {
+                        new Link(Url.Action("GetTicketById", new { ticketId = result}), "self", "GET"),
+                        new Link($"/Flight/{result}/pdf", "ticket-pdf", "GET")
+                    }
+                };
+
+                return Ok(resource);
             }
             catch (ArgumentException ex)
             {
@@ -35,6 +47,7 @@ namespace Airport.API.Controllers
                 return StatusCode(500, new { message = "Wystąpił błąd podczas zakupu biletu." });
             }
         }
+
 
         [HttpGet("Passenger/{passengerId}")]
         public async Task<ActionResult> GetPassengerTickets(Guid passengerId)
