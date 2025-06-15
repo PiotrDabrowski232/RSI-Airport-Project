@@ -21,7 +21,7 @@ const TicketCheck = () => {
 
     try {
       const response = await ticketService.getTicketById(ticketId.trim());
-      console.log("Otrzymane dane biletu:", response.data); // Debugging line
+      console.log("Otrzymane dane biletu:", response.data);
       setTicket(response.data);
     } catch (err) {
       if (err.response?.status === 404) {
@@ -31,6 +31,34 @@ const TicketCheck = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/Flight/${ticketId}/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Basic ' + btoa('user:password')
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Błąd pobierania PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `ticket-${ticketId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Błąd podczas pobierania PDF: ", err);
+      alert("Nie udało się pobrać biletu w formacie PDF.");
     }
   };
 
@@ -103,7 +131,7 @@ const TicketCheck = () => {
               </div>
               
               <div className="info-row">
-                <span className="label">Data przylotu</span>
+                <span className="label">Data przylotu:</span>
                 <span className="value">
                   {ticket.arrivalDate}
                 </span>
@@ -112,7 +140,7 @@ const TicketCheck = () => {
             </div>
             
             <div className="ticket-actions">
-              <button className="download-button">
+              <button onClick={handleDownloadPdf} className="download-button">
                 📄 Pobierz PDF
               </button>
             </div>

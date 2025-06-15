@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { flightService, passengerService, ticketService } from "../apiService";
+import { API_USERNAME, API_PASSWORD } from "../../config.js";
 import "./TicketPurchase.css";
-import { set } from "react-hook-form";
 
 const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
   const [passengerData, setPassengerData] = useState({
@@ -12,7 +12,7 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [purchasedTicketId, setPurchasedTicketId] = useState(null);
+  const [purchasedTicket, setPurchasedTicket] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,13 +28,11 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
     setError(null);
 
     try {
-      // Najpierw stwórz pasażera
       const passengerResponse = await passengerService.createPassenger(
         passengerData
       );
       const passengerId = passengerResponse.data.id;
 
-      // Następnie kup bilet
       const ticketData = {
         flightId: flight.id,
         passengerName: passengerData.name,
@@ -43,10 +41,10 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
       };
 
       const ticketResponse = await ticketService.purchaseTicket(ticketData);
-      setPurchasedTicketId(ticketResponse.data);
+      setPurchasedTicket(ticketResponse.data);
       setSuccess(true);
       if (onPurchaseComplete) {
-        onPurchaseComplete(ticketResponse.data);
+        onPurchaseComplete(ticketResponse.data.ticketID);
       }
     } catch (err) {
       setError("Błąd podczas zakupu biletu: " + err.message);
@@ -55,23 +53,84 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
     }
   };
 
-  const handleDownloadPdf = () => {
-    flightService
-      .getFlightPdf(purchasedTicketId)
-      .then((response) => {
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `ticket-${purchasedTicketId}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      })
-      .catch((err) => {
-        console.error("Błąd podczas pobierania PDF: ", err);
-        alert("Nie udało się pobrać biletu w formacie PDF.");
+  const getPdfLink = () => {
+    if (!purchasedTicket?.links) return null;
+    return purchasedTicket.links.find(link => link.rel === "ticket-pdf");
+  };
+
+  const getSelfLink = () => {
+    if (!purchasedTicket?.links) return null;
+    return purchasedTicket.links.find(link => link.rel === "self");
+  };
+
+  const getFullUrl = (href) => {
+    if (href.startsWith('http')) {
+      return href;
+    }
+    return `/api${href}`;
+  };
+
+  const handleDownloadPdf = async () => {
+    const pdfLink = getPdfLink();
+    if (!pdfLink) {
+      alert("Link do PDF nie jest dostępny");
+      return;
+    }
+
+    try {
+      const response = await fetch(getFullUrl(pdfLink.href), {
+        method: pdfLink.method || 'GET',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${API_USERNAME}:${API_PASSWORD}`)
+        }
       });
+
+      if (!response.ok) {
+        throw new Error('Błąd pobierania PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `ticket-${purchasedTicket.ticketID}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Błąd podczas pobierania PDF: ", err);
+      alert("Nie udało się pobrać biletu w formacie PDF.");
+    }
+  };
+
+  const handleViewTicketDetails = async () => {
+    const selfLink = getSelfLink();
+    if (!selfLink) {
+      alert("Link do szczegółów biletu nie jest dostępny");
+      return;
+    }
+
+    try {
+      const response = await fetch(getFullUrl(selfLink.href), {
+        method: selfLink.method || 'GET',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${API_USERNAME}:${API_PASSWORD}`),
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Błąd pobierania szczegółów biletu');
+      }
+
+      const ticketDetails = await response.json();
+      console.log("Szczegóły biletu:", ticketDetails);
+      alert(`Szczegóły biletu:\nID: ${ticketDetails.id}\nPasażer: ${ticketDetails.name} ${ticketDetails.surname}\nPESEL: ${ticketDetails.pesel}`);
+    } catch (err) {
+      console.error("Błąd podczas pobierania szczegółów: ", err);
+      alert("Nie udało się pobrać szczegółów biletu.");
+    }
   };
 
   const copyToClipboard = (text) => {
@@ -91,15 +150,15 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
       <div className="ticket-purchase">
         <div className="success-message">
           <h2>✅ Bilet został zakupiony pomyślnie!</h2>
-          {purchasedTicketId && (
+          {purchasedTicket && (
             <div className="ticket-id-section">
               <p>
                 <strong>ID Twojego biletu:</strong>
               </p>
               <div className="ticket-id-display">
-                <span>{purchasedTicketId}</span>
+                <span>{purchasedTicket.ticketID}</span>
                 <button
-                  onClick={() => copyToClipboard(purchasedTicketId)}
+                  onClick={() => copyToClipboard(purchasedTicket.ticketID)}
                   className="copy-button"
                   title="Kopiuj ID biletu"
                 >
@@ -115,9 +174,16 @@ const TicketPurchase = ({ flight, onBack, onPurchaseComplete }) => {
             Dziękujemy za zakup. Szczegóły zostały wysłane na Twój email
           </p>
           <div className="success-actions">
-            <button onClick={handleDownloadPdf} className="download-pdf-button">
-              📄 Pobierz bilet (PDF)
-            </button>
+            {getPdfLink() && (
+              <button onClick={handleDownloadPdf} className="download-pdf-button">
+                📄 Pobierz bilet (PDF)
+              </button>
+            )}
+            {getSelfLink() && (
+              <button onClick={handleViewTicketDetails} className="download-pdf-button">
+                🔍 Zobacz szczegóły
+              </button>
+            )}
             <button onClick={onBack} className="back-button">
               Powrót do wyszukiwania
             </button>
